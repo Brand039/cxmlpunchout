@@ -1,5 +1,5 @@
 {
-    "name": "Brand039/cxmlpunchout",
+    "name": "brand039/cxmlpunchout",
     "description": "A PHP library to handle cXML punchout orders for punchout",
     "type": "library",
     "authors": [
