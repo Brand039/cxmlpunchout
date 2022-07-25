@@ -1,11 +1,11 @@
 {
-    "name": "herbert/cxml",
-    "description": "A PHP library to handle cXML punchout orders",
+    "name": "mrweb74/cxmlpunchout",
+    "description": "A PHP library to handle cXML punchout orders for punchout",
     "type": "library",
     "authors": [
         {
-            "name": "Herbert Scheffknecht",
-            "email": "herbert@xoo.cc"
+            "name": "Vlad Corlade",
+            "email": "vlad.coerlade@brand039.com"
         }
     ],
     "require": {},
