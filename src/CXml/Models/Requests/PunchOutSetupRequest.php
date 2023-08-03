@@ -65,7 +65,10 @@ class PunchOutSetupRequest implements RequestInterface
         $this->state = $requestNode->xpath('ShipTo/Address/PostalAddress/State')[0];
         $this->postalCode = $requestNode->xpath('ShipTo/Address/PostalAddress/PostalCode')[0];
         $this->country = $requestNode->xpath('ShipTo/Address/PostalAddress/Country')[0];
-        $this->idAddress = $requestNode->xpath('ShipTo/Address')[0]->attributes()->addressID;
+        $this->idAddress = $requestNode->xpath('ShipTo/Address')[0];
+        if (!empty($this->idAddress)) { 
+            $this->idAddress = $this->idAddress->attributes()->addressID; 
+        }
         $this->items = $requestNode->xpath('ItemOut');
     }
 

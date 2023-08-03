@@ -34,6 +34,9 @@ class ItemIn
     /** @var string */
     private $manufacturerName;
 
+    /** @var string */
+    private $image;
+
     /** @var int|null */
     private $leadTime;
 
@@ -178,6 +181,17 @@ class ItemIn
         return $this;
     }
 
+    public function getImage(): string
+    {
+        return $this->image;
+    }
+
+    public function setImage(string $image): self
+    {
+        $this->image = $image;
+        return $this;
+    }
+
     public function getRequestedDeliveryDate(): ?string
     {
         return $this->requestedDeliveryDate;
@@ -253,6 +267,10 @@ class ItemIn
         $itemDetailsNode->addChild('ManufacturerPartID', $this->manufacturerPartId);
         $itemDetailsNode->addChild('ManufacturerName', $this->manufacturerName);
 
+        // Image
+        // $itemDetailsNode->addChild('Extrinsic', $this->image)
+            // ->addAttribute('name', 'image');
+
         // LeadTime
         if ($this->leadTime !== null) {
             $itemDetailsNode->addChild('LeadTime', $this->leadTime);
@@ -266,10 +284,10 @@ class ItemIn
 
     public function parse(\SimpleXMLElement $requestNode): void
     {
-        $this->quantity = (float)$requestNode->attributes()->quantity;
+        $this->quantity = $this->floatvalue($requestNode->attributes()->quantity);
         $this->supplierPartId = (string)$requestNode->xpath('ItemID/SupplierPartID')[0];
         $this->supplierPartAuxiliaryId = (string)$requestNode->xpath('ItemID/SupplierPartAuxiliaryID')[0];
-        $this->unitPrice = (float)$requestNode->xpath('ItemDetail/UnitPrice/Money')[0];
+        $this->unitPrice = $this->floatvalue($requestNode->xpath('ItemDetail/UnitPrice/Money')[0]);
         $this->unitOfMeasure = (string)$requestNode->xpath('ItemDetail/UnitOfMeasure')[0];
         $this->requestedDeliveryDate = (string)$requestNode->attributes()->requestedDeliveryDate;
         $extrinsics = $requestNode->xpath('ItemDetail/Extrinsic');
@@ -278,7 +296,9 @@ class ItemIn
         $extrinsicFiltr = array_filter($extrinsics, function($e) use ($name) {
             return $e->attributes()->name == $name;
         });
-        $this->requester = $extrinsics[array_key_first($extrinsicFiltr)];
+        if (!empty($extrinsicFiltr)) {
+            $this->requester = $extrinsics[array_key_first($extrinsicFiltr)];
+        }
     
     }
 
@@ -296,5 +316,16 @@ class ItemIn
     {
         $this->leadTime = $leadTime;
         return $this;
+    }
+
+    public function floatvalue($val){
+        // per verificare se l'importo ha decimali o no splitto l'importo e controllo il secondo elemento se ha più di due caratteri, dopo di che rimuovo la virgola dal valore
+        $valArray = explode(',', $val);
+        if (!empty($valArray) && !empty($valArray[1]) && strlen($valArray[1]) > 2) {
+            $val = str_replace(",","",$val);
+        }
+        $val = str_replace(",",".",$val);
+        $val = preg_replace('/\.(?=.*\.)/', '', $val);
+        return floatval($val);
     }
 }

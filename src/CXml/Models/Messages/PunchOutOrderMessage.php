@@ -14,10 +14,10 @@ class PunchOutOrderMessage implements MessageInterface
     private $items = [];
 
     /** @var string */
-    private $currency = 'USD';
+    private $currency = 'EUR';
 
     /** @var string string */
-    private $locale = 'en-US';
+    private $locale = 'it-IT';
 
     public function getBuyerCookie(): string
     {

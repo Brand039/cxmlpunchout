@@ -183,17 +183,21 @@ class PunchOutOrderMessageHeader
         // Total
         $this->addPriceNode($node, 'Total', $currency, $this->totalAmount);
 
+        // Shipping
+        if (!empty($this->shippingCost)) {
+            $this->addPriceNode($node, 'Shipping', $currency, $this->shippingCost, $this->shippingDescription, $locale);
+        }
+
+        // Tax
+        if (!empty($this->taxSum)) {
+            $this->addPriceNode($node, 'Tax', $currency, $this->taxSum, $this->taxDescription, $locale);
+        }
+
         // SupplierOrderInfo
         if (!empty($this->supplierOrderInfo)) {
             $node->addChild('SupplierOrderInfo', $this->supplierOrderInfo); 
         }
 
-        /*// Shipping
-        $this->addPriceNode($node, 'Shipping', $currency, $this->shippingCost, $this->shippingDescription, $locale);*/
-
-        // Tax
-        $this->addPriceNode($node, 'Tax', $currency, $this->taxSum, $this->taxDescription, $locale);
-        
         /*if ($this->aziNumeroOrdine !== null) {
             $node->addChild('Extrinsic', $this->aziRiferimento)->addAttribute('name', 'aziRiferimento');
         }

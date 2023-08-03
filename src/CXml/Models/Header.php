@@ -9,7 +9,7 @@ class Header
     private $fromIdentity;
     private $toIdentity;
     private $senderIdentity;
-    private $senderDomain = 'dev.gecalspa.it';
+    private $senderDomain;
     private $senderSharedSecret;
 
     public function getFromIdentity()
@@ -81,7 +81,7 @@ class Header
 
         $this->addNode($headerNode, 'From', $this->getFromIdentity() ?? 'Unknown', 'NetworkID');
         $this->addNode($headerNode, 'To', $this->getToIdentity() ?? 'Unknown', 'NetworkID');
-        $this->addNode($headerNode, 'Sender', $this->getSenderIdentity() ?? 'Unknown', $this->getSenderDomain())
+        $this->addNode($headerNode, 'Sender', $this->getSenderIdentity() ?? 'Unknown', 'NetworkID')
             ->addChild('UserAgent', 'Gecal Store Spa');
     }
 

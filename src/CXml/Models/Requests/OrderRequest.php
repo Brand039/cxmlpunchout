@@ -4,6 +4,9 @@ namespace CXml\Models\Requests;
 
 class OrderRequest implements RequestInterface
 {
+    /** @var float */
+    private $totalAmount;
+
     /** @var string|null */
     private $operation;
 
@@ -71,10 +74,16 @@ class OrderRequest implements RequestInterface
     private $billToISOCountry;
 
     /** @var string|null */
+    private $billToEmail;
+
+    /** @var string|null */
     private $orderDate;
 
     /** @var string|null */
     private $orderId;
+
+    /** @var string|null */
+    private $type;
 
     /** @var ItemIn[] */
     private $items = [];
@@ -83,25 +92,49 @@ class OrderRequest implements RequestInterface
     public function parse(\SimpleXMLElement $requestNode): void
     {
         $this->items = $requestNode->xpath('ItemOut');
+        $this->totalAmount = $this->floatvalue($requestNode->xpath('OrderRequestHeader/Total/Money')[0]);
         $this->orderDate = (string)$requestNode->xpath('OrderRequestHeader')[0]->attributes()->orderDate;
         $this->orderId = (string)$requestNode->xpath('OrderRequestHeader')[0]->attributes()->orderID;
+        $this->type = (string)$requestNode->xpath('OrderRequestHeader')[0]->attributes()->type;
         $this->shipToNameAddress = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/Name')[0];
         $this->shipToDeliverTo = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/DeliverTo')[0];
-        $this->shipToStreet = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/Street')[0];
+        // $this->shipToStreet = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/Street')[0];
+        if (!empty($requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/Street'))) {
+            foreach ($requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/Street') as $key => $value) {
+                $this->shipToStreet .= ' '.$value;    
+            }
+            // $this->shipToStreet .= ' '.$requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/Street')[1];
+        }
         $this->shipToCity = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/City')[0];
         $this->shipToState = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/State')[0];
         $this->shipToPostalCode = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/PostalCode')[0];
         $this->shipToCountry = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/Country')[0];
-        $this->shipToISOCountry = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/Country')[0]->attributes()->isoCountryCode;
-        $this->shipToIdAddress = $requestNode->xpath('OrderRequestHeader/ShipTo/Address')[0]->attributes()->addressID;
+        $this->shipToISOCountry = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/PostalAddress/Country')[0];
+        if (!empty($this->shipToISOCountry)) {
+            $this->shipToISOCountry = $this->shipToISOCountry->attributes()->isoCountryCode;
+        }
+        $this->shipToIdAddress = $requestNode->xpath('OrderRequestHeader/ShipTo/Address')[0];
+        if (!empty($this->shipToIdAddress)) { 
+            $this->shipToIdAddress = $this->shipToIdAddress->attributes()->addressID; 
+        }
         $this->shipToEmail = $requestNode->xpath('OrderRequestHeader/ShipTo/Address/Email')[0];
         $this->billToNameAddress = $requestNode->xpath('OrderRequestHeader/BillTo/Address/Name')[0];
-        $this->billToStreet = $requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/Street')[0];
+        // $this->billToStreet = $requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/Street')[0];
+        if (!empty($requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/Street'))) {
+            foreach ($requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/Street') as $key => $value) {
+                $this->billToStreet .= ' '.$value;    
+            }
+            // $this->billToStreet .= ' '.$requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/Street')[1];
+        }
         $this->billToCity = $requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/City')[0];
         $this->billToState = $requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/State')[0];
         $this->billToPostalCode = $requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/PostalCode')[0];
         $this->billToCountry = $requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/Country')[0];
-        $this->billToISOCountry = $requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/Country')[0]->attributes()->isoCountryCode;
+        $this->billToISOCountry = $requestNode->xpath('OrderRequestHeader/BillTo/Address/PostalAddress/Country')[0];
+        if (!empty($this->billToISOCountry)) { 
+            $this->billToISOCountry = $this->billToISOCountry->attributes()->isoCountryCode;
+        }
+        $this->billToEmail = $requestNode->xpath('OrderRequestHeader/BillTo/Address/Email')[0];
         // $this->billToIdAddress = $requestNode->xpath('BillTo/Address')[0]->attributes()->addressID;
         // $this->operation = (string)$requestNode->attributes()->operation;
     }
@@ -142,6 +175,11 @@ class OrderRequest implements RequestInterface
     {
         $this->browserFormPostUrl = $browserFormPostUrl;
         return $this;
+    }
+
+    public function getTotalAmount(): ?float
+    {
+        return $this->totalAmount;
     }
 
     public function getUserEmail(): ?string
@@ -249,6 +287,11 @@ class OrderRequest implements RequestInterface
         return $this->billToISOCountry;
     }
 
+    public function getBillToEmail(): ?string
+    {
+        return $this->billToEmail;
+    }
+
     /*public function getBillToIdAddress(): ?string
     {
         return $this->billToIdAddress;
@@ -273,5 +316,21 @@ class OrderRequest implements RequestInterface
     public function getOrderId(): ?string
     {
         return $this->orderId;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function floatvalue($val){
+        // per verificare se l'importo ha decimali o no splitto l'importo e controllo il secondo elemento se ha più di due caratteri, dopo di che rimuovo la virgola dal valore
+        $valArray = explode(',', $val);
+        if (!empty($valArray) && !empty($valArray[1]) && strlen($valArray[1]) > 2) {
+            $val = str_replace(",","",$val);
+        }
+        $val = str_replace(",",".",$val);
+        $val = preg_replace('/\.(?=.*\.)/', '', $val);
+        return floatval($val);
     }
 }
